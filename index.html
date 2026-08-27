@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Steinberg Displacement Limit Calculator</title>
+<style>
+  :root { --blue:#1f5fbf; --bg:#f6f8fb; --card:#ffffff; --ink:#1c2733; }
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+         background: var(--bg); color: var(--ink); margin: 0; padding: 24px; }
+  .card { max-width: 640px; margin: 0 auto; background: var(--card);
+          border-radius: 12px; padding: 28px 32px;
+          box-shadow: 0 2px 14px rgba(0,0,0,.08); }
+  h1 { font-size: 1.35rem; margin: 0 0 4px; }
+  .sub { color: #56677a; font-size: .9rem; margin-bottom: 20px; }
+  label { display: block; font-weight: 600; font-size: .85rem; margin: 14px 0 4px; }
+  input, select { width: 100%; padding: 8px 10px; font-size: 1rem;
+                  border: 1px solid #c9d4e0; border-radius: 6px; }
+  .row { display: flex; gap: 14px; }
+  .row > div { flex: 1; }
+  .const { color: #56677a; font-size: .85rem; margin-top: 10px; }
+  .result { margin-top: 22px; padding: 16px; border-radius: 8px;
+            background: #eef3fb; border-left: 4px solid var(--blue); }
+  .result b { font-size: 1.05rem; }
+  .val { font-variant-numeric: tabular-nums; }
+  .err { color: #b00020; margin-top: 12px; font-size: .9rem; }
+  .foot { color: #7b8a99; font-size: .78rem; margin-top: 22px; line-height: 1.5; }
+  .formula { text-align:center; font-style: italic; color:#33445a;
+             margin: 6px 0 2px; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>Steinberg Displacement Limits</h1>
+  <div class="sub">Relative displacement limit of a PCB component for
+    20&nbsp;million stress cycles (Steinberg, <i>Vibration Analysis for
+    Electronic Equipment</i>).</div>
+
+  <div class="formula">Z<sub>3&sigma;</sub> = 0.00022&thinsp;B / (C&thinsp;h&thinsp;r&thinsp;&radic;L)
+    &nbsp;&nbsp;|&nbsp;&nbsp;
+    Z<sub>peak</sub> = 0.00132&thinsp;B / (C&thinsp;h&thinsp;r&thinsp;&radic;L)</div>
+
+  <div class="row">
+    <div>
+      <label for="B">B — PCB edge parallel to component (in)</label>
+      <input id="B" type="number" step="any" value="6.0">
+    </div>
+    <div>
+      <label for="L">L — component length (in)</label>
+      <input id="L" type="number" step="any" value="2.0">
+    </div>
+    <div>
+      <label for="h">h — board thickness (in)</label>
+      <input id="h" type="number" step="any" value="0.062">
+    </div>
+  </div>
+
+  <label for="comp">Component type (sets C)</label>
+  <select id="comp"></select>
+
+  <label for="pos">Component position on the board (sets r)</label>
+  <select id="pos"></select>
+
+  <label for="Ncyc">Design life — stress cycles (Irvine fatigue curve; 2e7 = Steinberg's reference)</label>
+  <input id="Ncyc" type="number" step="any" value="20000000">
+
+  <div class="const" id="cr"></div>
+
+  <div class="result">
+    <div><b>Z 3&sigma; limit</b> (random vibration):
+      <span class="val" id="zv"></span></div>
+    <div style="margin-top:8px"><b>Z peak</b> (shock):
+      <span class="val" id="zs"></span></div>
+  </div>
+  <div class="err" id="err"></div>
+
+  <h2 style="font-size:1.05rem;margin:26px 0 0">Optional: margin of safety</h2>
+  <div class="sub" style="margin-bottom:0">Compare the limit against the
+    expected board displacement. Leave blank to skip.</div>
+  <div class="row">
+    <div>
+      <label for="fn">f&#8345; — board natural frequency (Hz)</label>
+      <input id="fn" type="number" step="any" placeholder="e.g. 180">
+    </div>
+    <div>
+      <label for="psd">PSD at f&#8345; (G&sup2;/Hz)</label>
+      <input id="psd" type="number" step="any" placeholder="e.g. 0.04">
+    </div>
+  </div>
+  <div class="row">
+    <div>
+      <label for="Q">Q — transmissibility (blank &rarr; &radic;f&#8345;)</label>
+      <input id="Q" type="number" step="any" placeholder="auto">
+    </div>
+    <div>
+      <label for="gpk">Shock level G&#8346;&#8342;&#8336;&#8342; (G)</label>
+      <input id="gpk" type="number" step="any" placeholder="e.g. 50">
+    </div>
+  </div>
+  <div class="result" id="mosbox" style="display:none">
+    <div id="mos_vib"></div>
+    <div id="mos_shk" style="margin-top:8px"></div>
+  </div>
+
+  <div class="foot">
+    References: D.&nbsp;S. Steinberg, <i>Vibration Analysis for Electronic
+    Equipment</i>, 3rd&nbsp;ed., Wiley, 2000 &middot; T.&nbsp;Irvine,
+    "Extending Steinberg's Fatigue Analysis of Electronics Equipment
+    Methodology to a Full Relative Displacement vs. Cycles Curve," 2013.
+    <br>When unsure, the conservative choices C&nbsp;=&nbsp;2.25 and
+    r&nbsp;=&nbsp;1 give the smallest (safest) allowable displacement.
+  </div>
+</div>
+
+<script>
+const COMPONENT_C = {
+  'Resistors, capacitors, diodes': 0.75,
+  'Standard DIP': 1.00,
+  'DIP with side-brazed lead wires': 1.26,
+  'Through-hole PGA': 1.00,
+  'Surface-mounted LCCC': 2.25,
+  'Surface-mounted chip carrier, J / gull-wing wires': 1.26,
+  'Surface-mounted BGA': 1.75,
+  'Fine-pitch surface-mounted axial leads': 0.75,
+  'Two parallel rows of wires (hybrid, VLSI, ASIC, MCM)': 1.26,
+  'Not sure (conservative)': 2.25,
+};
+const POSITION_R = {
+  'Center of PCB': 1.0,
+  'Near edge (half point X, quarter point Y)': 0.707,
+  'Near corner (quarter point X and Y)': 0.5,
+  'Not sure (conservative)': 1.0,
+};
+
+function fill(sel, obj, def) {
+  for (const k of Object.keys(obj)) {
+    const o = document.createElement('option');
+    o.textContent = k; o.value = k;
+    if (k === def) o.selected = true;
+    sel.appendChild(o);
+  }
+}
+const $ = id => document.getElementById(id);
+fill($('comp'), COMPONENT_C, 'Not sure (conservative)');
+fill($('pos'), POSITION_R, 'Not sure (conservative)');
+
+function update() {
+  const B = parseFloat($('B').value), L = parseFloat($('L').value),
+        h = parseFloat($('h').value);
+  const C = COMPONENT_C[$('comp').value], r = POSITION_R[$('pos').value];
+  const bad = [['B',B],['L',L],['h',h]].find(([n,v]) => !(v > 0));
+  if (bad) {
+    $('err').textContent = `${bad[0]} must be a positive number.`;
+    $('zv').textContent = $('zs').textContent = '-';
+    $('cr').textContent = '';
+    return;
+  }
+  $('err').textContent = '';
+  const denom = C * h * r * Math.sqrt(L);
+  let zv = 0.00022 * B / denom;
+  const zs = 0.00132 * B / denom;
+  // Irvine fatigue-curve scaling of the vibration limit: N * Z^6.4 = const
+  const N = parseFloat($('Ncyc').value);
+  let note = '';
+  if (N > 0 && Math.abs(N - 2e7) > 1) {
+    zv *= Math.pow(2e7 / N, 1 / 6.4);
+    note = `   (vibration limit scaled to ${N.toExponential(1)} cycles)`;
+  }
+  $('cr').textContent = `C = ${C}    r = ${r}${note}`;
+  $('zv').textContent = `${zv.toFixed(6)} in  =  ${(zv*25.4).toFixed(4)} mm`;
+  $('zs').textContent = `${zs.toFixed(6)} in  =  ${(zs*25.4).toFixed(4)} mm`;
+
+  // optional margin of safety
+  const fn = parseFloat($('fn').value), P = parseFloat($('psd').value),
+        Gp = parseFloat($('gpk').value);
+  let Q = parseFloat($('Q').value);
+  const rows = [];
+  if (fn > 0 && P > 0) {
+    if (!(Q > 0)) Q = Math.sqrt(fn);
+    const grms = Math.sqrt(Math.PI / 2 * P * fn * Q);
+    const za = 3 * 9.8 * grms / (fn * fn);
+    const mos = zv / za - 1;
+    rows.push(['mos_vib',
+      `Random vibration: expected 3-sigma Z = ${za.toFixed(6)} in  ->  ` +
+      `MoS = ${(mos >= 0 ? '+' : '') + mos.toFixed(2)}` +
+      (mos >= 0 ? '  PASS' : '  FAIL'), mos]);
+  } else rows.push(['mos_vib', '', null]);
+  if (fn > 0 && Gp > 0) {
+    const zshk = 9.8 * Gp / (fn * fn);
+    const mos = zs / zshk - 1;
+    rows.push(['mos_shk',
+      `Shock: expected peak Z = ${zshk.toFixed(6)} in  ->  ` +
+      `MoS = ${(mos >= 0 ? '+' : '') + mos.toFixed(2)}` +
+      (mos >= 0 ? '  PASS' : '  FAIL'), mos]);
+  } else rows.push(['mos_shk', '', null]);
+  const any = rows.some(r => r[1] !== '');
+  $('mosbox').style.display = any ? 'block' : 'none';
+  for (const [id, text, mos] of rows) {
+    $(id).textContent = text;
+    $(id).style.color = mos === null ? '' : (mos >= 0 ? '#0a7a2f' : '#b00020');
+    $(id).style.fontWeight = '600';
+  }
+}
+document.querySelectorAll('input, select')
+        .forEach(el => el.addEventListener('input', update));
+update();
+</script>
+</body>
+</html>
