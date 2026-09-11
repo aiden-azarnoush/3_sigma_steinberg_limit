@@ -5,205 +5,188 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Steinberg Displacement Limit Calculator</title>
 <style>
-  :root { --blue:#1f5fbf; --bg:#f6f8fb; --card:#ffffff; --ink:#1c2733; }
-  * { box-sizing: border-box; }
-  body { font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
-         background: var(--bg); color: var(--ink); margin: 0; padding: 24px; }
-  .card { max-width: 640px; margin: 0 auto; background: var(--card);
-          border-radius: 12px; padding: 28px 32px;
-          box-shadow: 0 2px 14px rgba(0,0,0,.08); }
-  h1 { font-size: 1.35rem; margin: 0 0 4px; }
-  .sub { color: #56677a; font-size: .9rem; margin-bottom: 20px; }
-  label { display: block; font-weight: 600; font-size: .85rem; margin: 14px 0 4px; }
-  input, select { width: 100%; padding: 8px 10px; font-size: 1rem;
-                  border: 1px solid #c9d4e0; border-radius: 6px; }
-  .row { display: flex; gap: 14px; }
-  .row > div { flex: 1; }
-  .const { color: #56677a; font-size: .85rem; margin-top: 10px; }
-  .result { margin-top: 22px; padding: 16px; border-radius: 8px;
-            background: #eef3fb; border-left: 4px solid var(--blue); }
-  .result b { font-size: 1.05rem; }
-  .val { font-variant-numeric: tabular-nums; }
-  .err { color: #b00020; margin-top: 12px; font-size: .9rem; }
-  .foot { color: #7b8a99; font-size: .78rem; margin-top: 22px; line-height: 1.5; }
-  .formula { text-align:center; font-style: italic; color:#33445a;
-             margin: 6px 0 2px; }
+  :root { --blue:#1f5fbf; --orange:#d3541f; --green:#0a7a2f; --red:#b00020; --bg:#f6f8fb; --card:#fff; --ink:#1c2733; --muted:#66768a; }
+  * { box-sizing:border-box; }
+  body { font-family:-apple-system,"Segoe UI",Helvetica,Arial,sans-serif; background:var(--bg); color:var(--ink); margin:0; padding:24px 14px; }
+  .card { max-width:860px; margin:0 auto; background:var(--card); border-radius:12px; padding:26px 30px; box-shadow:0 2px 14px rgba(0,0,0,.08); }
+  h1 { font-size:1.35rem; margin:0 0 4px; }
+  .sub { color:var(--muted); font-size:.9rem; margin-bottom:14px; }
+  .formula { text-align:center; font-style:italic; color:#33445a; margin:6px 0 14px; font-size:1.02rem; }
+  label { display:block; font-weight:600; font-size:.85rem; margin:12px 0 4px; }
+  input, select { width:100%; padding:8px 10px; font-size:1rem; border:1px solid #c9d4e0; border-radius:6px; }
+  .row { display:flex; gap:14px; } .row > div { flex:1; }
+  .pick { display:grid; grid-template-columns:1fr 190px; gap:14px; align-items:end; }
+  .pick svg { width:100%; height:auto; border:1px solid #e3e9f0; border-radius:8px; background:#fbfcfe; }
+  .const { color:var(--muted); font-size:.85rem; margin-top:10px; }
+  .result { margin-top:20px; padding:16px; border-radius:8px; background:#eef3fb; border-left:4px solid var(--blue); }
+  .result b { font-size:1.05rem; } .val { font-variant-numeric:tabular-nums; }
+  .err { color:var(--red); margin-top:12px; font-size:.9rem; }
+  h2 { font-size:1.02rem; margin:26px 0 0; }
+  .refs { color:var(--muted); font-size:.78rem; margin-top:22px; line-height:1.5; }
+  footer { max-width:860px; margin:22px auto 0; text-align:center; color:var(--muted); font-size:.85rem; line-height:1.9; }
+  footer a { color:var(--blue); text-decoration:none; margin:0 8px; white-space:nowrap; }
+  footer a:hover { text-decoration:underline; }
+  footer svg { width:16px; height:16px; vertical-align:-3px; margin-right:4px; }
+  @media (max-width:640px) { .row, .pick { display:block; } .pick svg { max-width:220px; margin-top:8px; } }
 </style>
 </head>
 <body>
 <div class="card">
   <h1>Steinberg Displacement Limits</h1>
-  <div class="sub">Relative displacement limit of a PCB component for
-    20&nbsp;million stress cycles (Steinberg, <i>Vibration Analysis for
-    Electronic Equipment</i>).</div>
-
-  <div class="formula">Z<sub>3&sigma;</sub> = 0.00022&thinsp;B / (C&thinsp;h&thinsp;r&thinsp;&radic;L)
-    &nbsp;&nbsp;|&nbsp;&nbsp;
-    Z<sub>peak</sub> = 0.00132&thinsp;B / (C&thinsp;h&thinsp;r&thinsp;&radic;L)</div>
+  <div class="sub">Relative displacement limit of a PCB-mounted component for 20&nbsp;million stress cycles
+    (Steinberg, <i>Vibration Analysis for Electronic Equipment</i>). Pick the component and where it sits; the sketches update.</div>
+  <div class="formula">Z<sub>3σ</sub> = 0.00022&thinsp;B / (C&thinsp;h&thinsp;r&thinsp;√L) &nbsp;&nbsp;|&nbsp;&nbsp; Z<sub>peak</sub> = 0.00132&thinsp;B / (C&thinsp;h&thinsp;r&thinsp;√L)</div>
 
   <div class="row">
-    <div>
-      <label for="B">B — PCB edge parallel to component (in)</label>
-      <input id="B" type="number" step="any" value="6.0">
-    </div>
-    <div>
-      <label for="L">L — component length (in)</label>
-      <input id="L" type="number" step="any" value="2.0">
-    </div>
-    <div>
-      <label for="h">h — board thickness (in)</label>
-      <input id="h" type="number" step="any" value="0.062">
-    </div>
+    <div><label for="B">B — PCB edge parallel to component (in)</label><input id="B" type="number" step="any" value="6.0"></div>
+    <div><label for="L">L — component length (in)</label><input id="L" type="number" step="any" value="2.0"></div>
+    <div><label for="h">h — board thickness (in)</label><input id="h" type="number" step="any" value="0.062"></div>
   </div>
 
-  <label for="comp">Component type (sets C)</label>
-  <select id="comp"></select>
+  <div class="pick">
+    <div><label for="comp">Component type (sets C)</label><select id="comp"></select></div>
+    <svg id="compPic" viewBox="0 0 190 110" aria-label="component sketch"></svg>
+  </div>
 
-  <label for="pos">Component position on the board (sets r)</label>
-  <select id="pos"></select>
+  <div class="pick">
+    <div><label for="pos">Component position on the board (sets r)</label><select id="pos"></select></div>
+    <svg id="posPic" viewBox="0 0 190 110" aria-label="board position sketch"></svg>
+  </div>
 
-  <label for="Ncyc">Design life — stress cycles (Irvine fatigue curve; 2e7 = Steinberg's reference)</label>
+  <label for="Ncyc">Design life — stress cycles (Irvine fatigue curve; 2e7 is Steinberg's reference point)</label>
   <input id="Ncyc" type="number" step="any" value="20000000">
 
   <div class="const" id="cr"></div>
 
   <div class="result">
-    <div><b>Z 3&sigma; limit</b> (random vibration):
-      <span class="val" id="zv"></span></div>
-    <div style="margin-top:8px"><b>Z peak</b> (shock):
-      <span class="val" id="zs"></span></div>
+    <div><b>Z 3σ limit</b> (random vibration): <span class="val" id="zv"></span></div>
+    <div style="margin-top:8px"><b>Z peak</b> (shock): <span class="val" id="zs"></span></div>
   </div>
   <div class="err" id="err"></div>
 
-  <h2 style="font-size:1.05rem;margin:26px 0 0">Optional: margin of safety</h2>
-  <div class="sub" style="margin-bottom:0">Compare the limit against the
-    expected board displacement. Leave blank to skip.</div>
+  <h2>Optional: margin of safety</h2>
+  <div class="sub" style="margin-bottom:0">Compare the limit against the expected board displacement. Leave blank to skip.</div>
   <div class="row">
-    <div>
-      <label for="fn">f&#8345; — board natural frequency (Hz)</label>
-      <input id="fn" type="number" step="any" placeholder="e.g. 180">
-    </div>
-    <div>
-      <label for="psd">PSD at f&#8345; (G&sup2;/Hz)</label>
-      <input id="psd" type="number" step="any" placeholder="e.g. 0.04">
-    </div>
+    <div><label for="fn">f<sub>n</sub> — board natural frequency (Hz)</label><input id="fn" type="number" step="any" placeholder="e.g. 180"></div>
+    <div><label for="psd">PSD at f<sub>n</sub> (G²/Hz)</label><input id="psd" type="number" step="any" placeholder="e.g. 0.04"></div>
   </div>
   <div class="row">
-    <div>
-      <label for="Q">Q — transmissibility (blank &rarr; &radic;f&#8345;)</label>
-      <input id="Q" type="number" step="any" placeholder="auto">
-    </div>
-    <div>
-      <label for="gpk">Shock level G&#8346;&#8342;&#8336;&#8342; (G)</label>
-      <input id="gpk" type="number" step="any" placeholder="e.g. 50">
-    </div>
+    <div><label for="Q">Q — transmissibility (blank → √f<sub>n</sub>)</label><input id="Q" type="number" step="any" placeholder="auto"></div>
+    <div><label for="gpk">Shock level G<sub>peak</sub> (G)</label><input id="gpk" type="number" step="any" placeholder="e.g. 50"></div>
   </div>
   <div class="result" id="mosbox" style="display:none">
     <div id="mos_vib"></div>
     <div id="mos_shk" style="margin-top:8px"></div>
   </div>
 
-  <div class="foot">
-    References: D.&nbsp;S. Steinberg, <i>Vibration Analysis for Electronic
-    Equipment</i>, 3rd&nbsp;ed., Wiley, 2000 &middot; T.&nbsp;Irvine,
-    "Extending Steinberg's Fatigue Analysis of Electronics Equipment
-    Methodology to a Full Relative Displacement vs. Cycles Curve," 2013.
-    <br>When unsure, the conservative choices C&nbsp;=&nbsp;2.25 and
-    r&nbsp;=&nbsp;1 give the smallest (safest) allowable displacement.
+  <div class="refs">
+    References: D.&nbsp;S. Steinberg, <i>Vibration Analysis for Electronic Equipment</i>, 3rd&nbsp;ed., Wiley, 2000 &middot;
+    T.&nbsp;Irvine, "Extending Steinberg's Fatigue Analysis of Electronics Equipment Methodology to a Full Relative
+    Displacement vs. Cycles Curve," 2013. When unsure, the conservative choices C&nbsp;=&nbsp;2.25 and r&nbsp;=&nbsp;1 give the
+    smallest (safest) allowable displacement. Component sketches are schematic.
   </div>
 </div>
 
+<footer>
+  Written by <b>Aiden Azarnoush</b><br>
+  <a href="https://github.com/aiden-azarnoush/3_sigma_steinberg_limit"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M5.5 3 1 8l4.5 5 1-1L2.9 8l3.6-4zM10.5 3l-1 1L13.1 8l-3.6 4 1 1L15 8z"/></svg>source on GitHub</a>
+  <a href="https://github.com/aiden-azarnoush"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm0 1.5a5.5 5.5 0 1 1 0 11 5.5 5.5 0 0 1 0-11zM8 4a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zm0 6c-2 0-3.5 1-3.5 2v.3A5.5 5.5 0 0 0 8 13.5a5.5 5.5 0 0 0 3.5-1.2V12c0-1-1.5-2-3.5-2z"/></svg>all my repositories</a>
+  <a href="https://aiden-azarnoush.github.io"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm4.9 6h-2.1a11 11 0 0 0-.9-3.6A5.5 5.5 0 0 1 12.9 7zM8 2.5c.7.8 1.4 2.3 1.6 4.5H6.4c.2-2.2.9-3.7 1.6-4.5zM3.1 7a5.5 5.5 0 0 1 3-3.6c-.4 1-.7 2.3-.9 3.6H3.1zm0 2h2.1c.2 1.3.5 2.6.9 3.6A5.5 5.5 0 0 1 3.1 9zM8 13.5c-.7-.8-1.4-2.3-1.6-4.5h3.2c-.2 2.2-.9 3.7-1.6 4.5zm1.9-.9c.4-1 .7-2.3.9-3.6h2.1a5.5 5.5 0 0 1-3 3.6z"/></svg>aiden-azarnoush.github.io</a>
+</footer>
+
 <script>
 const COMPONENT_C = {
-  'Resistors, capacitors, diodes': 0.75,
-  'Standard DIP': 1.00,
-  'DIP with side-brazed lead wires': 1.26,
-  'Through-hole PGA': 1.00,
-  'Surface-mounted LCCC': 2.25,
-  'Surface-mounted chip carrier, J / gull-wing wires': 1.26,
-  'Surface-mounted BGA': 1.75,
-  'Fine-pitch surface-mounted axial leads': 0.75,
-  'Two parallel rows of wires (hybrid, VLSI, ASIC, MCM)': 1.26,
-  'Not sure (conservative)': 2.25,
+  resistor: ['Resistors, capacitors, diodes (axial leads)', 0.75],
+  dip:      ['Standard DIP', 1.00],
+  dipbraze: ['DIP with side-brazed lead wires', 1.26],
+  pga:      ['Through-hole PGA', 1.00],
+  lccc:     ['Surface-mounted LCCC (leadless)', 2.25],
+  jlead:    ['Surface-mounted chip carrier, J / gull-wing leads', 1.26],
+  bga:      ['Surface-mounted BGA', 1.75],
+  finepitch:['Fine-pitch surface-mounted, leads around the perimeter', 0.75],
+  tworows:  ['Two parallel rows of wires (hybrid, VLSI, ASIC, MCM)', 1.26],
+  unsure:   ['Not sure (conservative)', 2.25],
 };
 const POSITION_R = {
-  'Center of PCB': 1.0,
-  'Near edge (half point X, quarter point Y)': 0.707,
-  'Near corner (quarter point X and Y)': 0.5,
-  'Not sure (conservative)': 1.0,
+  center: ['Center of PCB', 1.0],
+  edge:   ['Half point X, quarter point Y (near an edge)', 0.707],
+  corner: ['Quarter point X and Y (near a corner)', 0.5],
+  unsure: ['Not sure (conservative)', 1.0],
 };
 
+// ---- schematic component sketches (side views; simple, original line drawings)
+const K = '#1c2733', BODY = '#3a4a5c', PAD = '#b8862b', BALL = '#9aa7b5';
+const board = `<rect x="10" y="88" width="170" height="8" fill="#2f7d4f"/>`;
+const body = (x, y, w, h, fill = BODY) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="3" fill="${fill}" stroke="${K}"/>`;
+const pins = (x0, x1, n, y0, y1) => Array.from({length: n}, (_, i) => { const x = x0 + (x1 - x0) * i / (n - 1);
+  return `<line x1="${x}" y1="${y0}" x2="${x}" y2="${y1}" stroke="${K}" stroke-width="2"/>`; }).join('');
+const SKETCH = {
+  resistor: `${board}<line x1="30" y1="60" x2="70" y2="60" stroke="${K}" stroke-width="2"/><line x1="120" y1="60" x2="160" y2="60" stroke="${K}" stroke-width="2"/>
+    <rect x="70" y="48" width="50" height="24" rx="10" fill="#c9a26b" stroke="${K}"/><line x1="82" y1="48" x2="82" y2="72" stroke="#7a2e2e" stroke-width="3"/><line x1="92" y1="48" x2="92" y2="72" stroke="#2e4a7a" stroke-width="3"/>
+    <path d="M30 60 v28 M160 60 v28" fill="none" stroke="${K}" stroke-width="2"/>`,
+  dip: `${board}${body(45, 40, 100, 28)}${pins(52, 138, 8, 68, 88)}<circle cx="52" cy="47" r="3" fill="#fff"/>`,
+  dipbraze: `${board}${body(45, 40, 100, 28)}${pins(52, 138, 8, 68, 88)}
+    ${Array.from({length: 8}, (_, i) => `<rect x="${49 + 86 * i / 7}" y="60" width="7" height="9" fill="${PAD}" stroke="${K}" stroke-width=".8"/>`).join('')}`,
+  pga: `${board}${body(40, 44, 110, 22)}${pins(46, 144, 12, 66, 88)}`,
+  lccc: `${board}${body(55, 60, 80, 26, '#d9d3c4')}<rect x="55" y="82" width="80" height="6" fill="${PAD}"/>
+    ${Array.from({length: 6}, (_, i) => `<rect x="${57 + 76 * i / 6}" y="60" width="4" height="26" fill="#b8b0a0" stroke="${K}" stroke-width=".5"/>`).join('')}`,
+  jlead: `${board}${body(60, 50, 70, 26, '#d9d3c4')}<path d="M60 68 h-10 q-6 0 -6 6 v6 q0 8 8 8 h10 M130 68 h10 q6 0 6 6 v6 q0 8 -8 8 h-10" fill="none" stroke="${K}" stroke-width="2.5"/>`,
+  bga: `${board}${body(45, 60, 100, 18, '#4a5a6c')}${Array.from({length: 9}, (_, i) => `<circle cx="${52 + 86 * i / 8}" cy="83" r="4.5" fill="${BALL}" stroke="${K}" stroke-width=".8"/>`).join('')}`,
+  finepitch: `${board}${body(60, 50, 70, 26, '#3a4a5c')}${Array.from({length: 10}, (_, i) => `<path d="M60 ${53 + 2 * i} h-8 M130 ${53 + 2 * i} h8" stroke="${K}" stroke-width="1"/>`).join('')}
+    <path d="M52 56 v22 q0 10 -10 10 h-6 M138 56 v22 q0 10 10 10 h6" fill="none" stroke="${K}" stroke-width="1.6"/>`,
+  tworows: `${board}${body(30, 42, 130, 26)}${pins(38, 152, 14, 68, 88)}`,
+  unsure: `${board}<text x="95" y="66" font-size="48" text-anchor="middle" fill="#9aa7b5" font-weight="700">?</text>`,
+};
+// ---- board position sketches (top view)
+const POSPIC = {
+  center: [95, 55], edge: [95, 82], corner: [50, 82], unsure: null,
+};
+function posSketch(key) {
+  const pcb = `<rect x="20" y="15" width="150" height="80" fill="#2f7d4f" stroke="${K}"/>
+    <line x1="95" y1="15" x2="95" y2="95" stroke="#fff" stroke-dasharray="3 3" opacity=".5"/>
+    <line x1="20" y1="55" x2="170" y2="55" stroke="#fff" stroke-dasharray="3 3" opacity=".5"/>`;
+  const p = POSPIC[key];
+  if (!p) return pcb + `<text x="95" y="62" font-size="26" text-anchor="middle" fill="#fff" font-weight="700">?</text>`;
+  return pcb + `<rect x="${p[0] - 18}" y="${p[1] - 9}" width="36" height="18" fill="${BODY}" stroke="#fff"/>`;
+}
+
 function fill(sel, obj, def) {
-  for (const k of Object.keys(obj)) {
-    const o = document.createElement('option');
-    o.textContent = k; o.value = k;
-    if (k === def) o.selected = true;
-    sel.appendChild(o);
-  }
+  for (const [k, [name]] of Object.entries(obj)) { const o = document.createElement('option'); o.value = k; o.textContent = name; if (k === def) o.selected = true; sel.appendChild(o); }
 }
 const $ = id => document.getElementById(id);
-fill($('comp'), COMPONENT_C, 'Not sure (conservative)');
-fill($('pos'), POSITION_R, 'Not sure (conservative)');
+fill($('comp'), COMPONENT_C, 'unsure'); fill($('pos'), POSITION_R, 'unsure');
 
 function update() {
-  const B = parseFloat($('B').value), L = parseFloat($('L').value),
-        h = parseFloat($('h').value);
-  const C = COMPONENT_C[$('comp').value], r = POSITION_R[$('pos').value];
-  const bad = [['B',B],['L',L],['h',h]].find(([n,v]) => !(v > 0));
-  if (bad) {
-    $('err').textContent = `${bad[0]} must be a positive number.`;
-    $('zv').textContent = $('zs').textContent = '-';
-    $('cr').textContent = '';
-    return;
-  }
+  $('compPic').innerHTML = SKETCH[$('comp').value];
+  $('posPic').innerHTML = posSketch($('pos').value);
+  const B = parseFloat($('B').value), L = parseFloat($('L').value), h = parseFloat($('h').value);
+  const C = COMPONENT_C[$('comp').value][1], r = POSITION_R[$('pos').value][1];
+  const bad = [['B', B], ['L', L], ['h', h]].find(([n, v]) => !(v > 0));
+  if (bad) { $('err').textContent = `${bad[0]} must be a positive number.`; $('zv').textContent = $('zs').textContent = '-'; $('cr').textContent = ''; return; }
   $('err').textContent = '';
   const denom = C * h * r * Math.sqrt(L);
-  let zv = 0.00022 * B / denom;
-  const zs = 0.00132 * B / denom;
-  // Irvine fatigue-curve scaling of the vibration limit: N * Z^6.4 = const
-  const N = parseFloat($('Ncyc').value);
-  let note = '';
-  if (N > 0 && Math.abs(N - 2e7) > 1) {
-    zv *= Math.pow(2e7 / N, 1 / 6.4);
-    note = `   (vibration limit scaled to ${N.toExponential(1)} cycles)`;
-  }
+  let zv = 0.00022 * B / denom; const zs = 0.00132 * B / denom;
+  const N = parseFloat($('Ncyc').value); let note = '';
+  if (N > 0 && Math.abs(N - 2e7) > 1) { zv *= Math.pow(2e7 / N, 1 / 6.4); note = `   (vibration limit scaled to ${N.toExponential(1)} cycles, N·Z^6.4 = const)`; }
   $('cr').textContent = `C = ${C}    r = ${r}${note}`;
-  $('zv').textContent = `${zv.toFixed(6)} in  =  ${(zv*25.4).toFixed(4)} mm`;
-  $('zs').textContent = `${zs.toFixed(6)} in  =  ${(zs*25.4).toFixed(4)} mm`;
+  $('zv').textContent = `${zv.toFixed(6)} in  =  ${(zv * 25.4).toFixed(4)} mm`;
+  $('zs').textContent = `${zs.toFixed(6)} in  =  ${(zs * 25.4).toFixed(4)} mm`;
 
-  // optional margin of safety
-  const fn = parseFloat($('fn').value), P = parseFloat($('psd').value),
-        Gp = parseFloat($('gpk').value);
-  let Q = parseFloat($('Q').value);
-  const rows = [];
+  const fn = parseFloat($('fn').value), P = parseFloat($('psd').value), Gp = parseFloat($('gpk').value);
+  let Q = parseFloat($('Q').value); const rows = [];
   if (fn > 0 && P > 0) {
     if (!(Q > 0)) Q = Math.sqrt(fn);
-    const grms = Math.sqrt(Math.PI / 2 * P * fn * Q);
-    const za = 3 * 9.8 * grms / (fn * fn);
-    const mos = zv / za - 1;
-    rows.push(['mos_vib',
-      `Random vibration: expected 3-sigma Z = ${za.toFixed(6)} in  ->  ` +
-      `MoS = ${(mos >= 0 ? '+' : '') + mos.toFixed(2)}` +
-      (mos >= 0 ? '  PASS' : '  FAIL'), mos]);
+    const grms = Math.sqrt(Math.PI / 2 * P * fn * Q), za = 3 * 9.8 * grms / (fn * fn), mos = zv / za - 1;
+    rows.push(['mos_vib', `Random vibration: expected 3-sigma Z = ${za.toFixed(6)} in  ->  MoS = ${(mos >= 0 ? '+' : '') + mos.toFixed(2)}` + (mos >= 0 ? '  PASS' : '  FAIL'), mos]);
   } else rows.push(['mos_vib', '', null]);
   if (fn > 0 && Gp > 0) {
-    const zshk = 9.8 * Gp / (fn * fn);
-    const mos = zs / zshk - 1;
-    rows.push(['mos_shk',
-      `Shock: expected peak Z = ${zshk.toFixed(6)} in  ->  ` +
-      `MoS = ${(mos >= 0 ? '+' : '') + mos.toFixed(2)}` +
-      (mos >= 0 ? '  PASS' : '  FAIL'), mos]);
+    const zshk = 9.8 * Gp / (fn * fn), mos = zs / zshk - 1;
+    rows.push(['mos_shk', `Shock: expected peak Z = ${zshk.toFixed(6)} in  ->  MoS = ${(mos >= 0 ? '+' : '') + mos.toFixed(2)}` + (mos >= 0 ? '  PASS' : '  FAIL'), mos]);
   } else rows.push(['mos_shk', '', null]);
-  const any = rows.some(r => r[1] !== '');
-  $('mosbox').style.display = any ? 'block' : 'none';
-  for (const [id, text, mos] of rows) {
-    $(id).textContent = text;
-    $(id).style.color = mos === null ? '' : (mos >= 0 ? '#0a7a2f' : '#b00020');
-    $(id).style.fontWeight = '600';
-  }
+  $('mosbox').style.display = rows.some(r => r[1] !== '') ? 'block' : 'none';
+  for (const [id, text, mos] of rows) { $(id).textContent = text; $(id).style.color = mos === null ? '' : (mos >= 0 ? 'var(--green)' : 'var(--red)'); $(id).style.fontWeight = '600'; }
 }
-document.querySelectorAll('input, select')
-        .forEach(el => el.addEventListener('input', update));
+document.querySelectorAll('input, select').forEach(el => el.addEventListener('input', update));
 update();
 </script>
 </body>
