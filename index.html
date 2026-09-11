@@ -13,9 +13,11 @@
   .sub { color:var(--muted); font-size:.9rem; margin-bottom:14px; }
   .formula { text-align:center; font-style:italic; color:#33445a; margin:6px 0 14px; font-size:1.02rem; }
   label { display:block; font-weight:600; font-size:.85rem; margin:12px 0 4px; }
+  .pick label { margin-top:0; }
+  .pick { margin-top:10px; }
   input, select { width:100%; padding:8px 10px; font-size:1rem; border:1px solid #c9d4e0; border-radius:6px; }
-  .row { display:flex; gap:14px; } .row > div { flex:1; }
-  .pick { display:grid; grid-template-columns:1fr 190px; gap:14px; align-items:end; }
+  .row { display:flex; gap:14px; align-items:flex-end; } .row > div { flex:1; }
+  .pick { display:grid; grid-template-columns:1fr 150px; gap:14px; align-items:center; }
   .pick svg { width:100%; height:auto; border:1px solid #e3e9f0; border-radius:8px; background:#fbfcfe; }
   .const { color:var(--muted); font-size:.85rem; margin-top:10px; }
   .result { margin-top:20px; padding:16px; border-radius:8px; background:#eef3fb; border-left:4px solid var(--blue); }
@@ -38,7 +40,7 @@
   <div class="formula">Z<sub>3σ</sub> = 0.00022&thinsp;B / (C&thinsp;h&thinsp;r&thinsp;√L) &nbsp;&nbsp;|&nbsp;&nbsp; Z<sub>peak</sub> = 0.00132&thinsp;B / (C&thinsp;h&thinsp;r&thinsp;√L)</div>
 
   <div class="row">
-    <div><label for="B">B — PCB edge parallel to component (in)</label><input id="B" type="number" step="any" value="6.0"></div>
+    <div><label for="B">B — PCB edge along component (in)</label><input id="B" type="number" step="any" value="6.0"></div>
     <div><label for="L">L — component length (in)</label><input id="L" type="number" step="any" value="2.0"></div>
     <div><label for="h">h — board thickness (in)</label><input id="h" type="number" step="any" value="0.062"></div>
   </div>
