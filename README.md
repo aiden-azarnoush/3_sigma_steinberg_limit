@@ -8,8 +8,7 @@ in random vibration or a shock event. Pick the component type and its
 position on the board (a sketch of each updates as you choose), enter the
 board dimensions, and read the limits in inches and millimeters. Optional
 inputs give the expected displacement and a margin of safety. A Python
-version (module, GUI, command line) is in [`python/`](python/), with the
-original Excel worksheet in [`excel/`](excel/).
+version (module, GUI, command line) is in [`python/`](python/).
 
 <p align="center">
 <img src="figures/bending_motion.png" width="520" alt="Component and lead wires undergoing bending motion">
@@ -105,14 +104,11 @@ from steinberg import z_limits, z_limit_at_cycles, expected_z_random, margin
 zv, zs = z_limits(B=6, L=2, h=0.062, C=1.75, r=0.707)
 ```
 
-The Python module reproduces the Excel workbook in `excel/` exactly.
-
 ## Repository layout
 
 ```
 index.html          the web calculator (GitHub Pages serves this)
 python/             steinberg.py (module + CLI), steinberg_gui.py
-excel/              the original worksheet
 figures/
 ```
 
