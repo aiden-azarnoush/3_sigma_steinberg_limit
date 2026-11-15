@@ -4,89 +4,157 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Steinberg Displacement Limit Calculator</title>
+<meta name="description" content="Free calculator for Steinberg's relative displacement limits of PCB-mounted components in random vibration and shock, with margin of safety.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="3σ Steinberg Limit Calculator">
+<meta property="og:description" content="Will your PCB component survive the vibration? Steinberg's random vibration and shock displacement limits, Miles' equation and margin of safety, in the browser.">
+<meta property="og:url" content="https://aiden-azarnoush.github.io/3_sigma_steinberg_limit/">
+<meta property="og:image" content="https://aiden-azarnoush.github.io/3_sigma_steinberg_limit/figures/social.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
 <style>
-  :root { --blue:#1f5fbf; --orange:#d3541f; --green:#0a7a2f; --red:#b00020; --bg:#f6f8fb; --card:#fff; --ink:#1c2733; --muted:#66768a; }
+  :root { --blue:#1f5fbf; --green:#0a7a2f; --red:#b00020; --bg:#f3f6fa; --card:#fff; --ink:#1c2733; --muted:#66768a; --line:#dde5ee;
+          --dark:#0f1724; --dink:#e8edf5; --dmuted:#8a97ab; --good:#35c27a; --bad:#ff5a52; }
   * { box-sizing:border-box; }
-  body { font-family:-apple-system,"Segoe UI",Helvetica,Arial,sans-serif; background:var(--bg); color:var(--ink); margin:0; padding:24px 14px; }
-  .card { max-width:860px; margin:0 auto; background:var(--card); border-radius:12px; padding:26px 30px; box-shadow:0 2px 14px rgba(0,0,0,.08); }
-  h1 { font-size:1.35rem; margin:0 0 4px; }
-  .sub { color:var(--muted); font-size:.9rem; margin-bottom:14px; }
-  .formula { text-align:center; font-style:italic; color:#33445a; margin:6px 0 14px; font-size:1.02rem; }
-  label { display:block; font-weight:600; font-size:.85rem; margin:12px 0 4px; }
-  .pick label { margin-top:0; }
-  .pick { margin-top:10px; }
-  input, select { width:100%; padding:8px 10px; font-size:1rem; border:1px solid #c9d4e0; border-radius:6px; }
-  .row { display:flex; gap:14px; align-items:flex-end; } .row > div { flex:1; }
-  .pick { display:grid; grid-template-columns:1fr 150px; gap:14px; align-items:center; }
+  body { font-family:-apple-system,"Segoe UI",Helvetica,Arial,sans-serif; background:var(--bg); color:var(--ink); margin:0; padding:24px 16px; }
+  .wrap { max-width:1120px; margin:0 auto; }
+  header h1 { font-size:1.5rem; margin:0 0 4px; }
+  header .sub { color:var(--muted); font-size:.95rem; margin-bottom:18px; line-height:1.45; }
+  .grid { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:20px; align-items:start; }
+  .panel { background:var(--card); border-radius:14px; box-shadow:0 2px 14px rgba(0,0,0,.07); overflow:hidden; }
+  .panel > .head { display:flex; align-items:center; gap:10px; padding:14px 20px; border-bottom:1px solid var(--line); font-weight:700; letter-spacing:.06em; font-size:.82rem; text-transform:uppercase; }
+  .tag { display:inline-block; padding:3px 9px; border-radius:20px; font-size:.72rem; letter-spacing:.06em; }
+  .tag.in { background:#e6effc; color:var(--blue); } .tag.out { background:#e3f5ea; color:var(--green); }
+  .body { padding:6px 20px 20px; }
+  .step { padding:14px 0; border-bottom:1px dashed var(--line); }
+  .step:last-child { border-bottom:0; }
+  .step h3 { margin:0 0 4px; font-size:1rem; display:flex; flex-wrap:wrap; align-items:center; gap:4px 8px; }
+  .num { width:22px; height:22px; border-radius:50%; background:var(--blue); color:#fff; font-size:.78rem; display:inline-flex; align-items:center; justify-content:center; flex:none; }
+  .opt { font-weight:500; color:var(--muted); font-size:.82rem; }
+  .hint { color:var(--muted); font-size:.83rem; margin:0 0 6px; line-height:1.4; }
+  label { display:block; font-weight:600; font-size:.83rem; margin:10px 0 4px; }
+  input, select { width:100%; padding:8px 10px; font-size:1rem; border:1px solid #c9d4e0; border-radius:7px; background:#fff; color:var(--ink); }
+  .unit { display:flex; } .unit input { border-radius:7px 0 0 7px; } .unit select { width:auto; border-radius:0 7px 7px 0; border-left:0; background:#f4f7fb; font-size:.9rem; }
+  .row { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; } .row.two { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .pick { display:grid; grid-template-columns:minmax(0,1fr) 150px; gap:12px; align-items:center; }
   .pick svg { width:100%; height:auto; border:1px solid #e3e9f0; border-radius:8px; background:#fbfcfe; }
-  .const { color:var(--muted); font-size:.85rem; margin-top:10px; }
-  .result { margin-top:20px; padding:16px; border-radius:8px; background:#eef3fb; border-left:4px solid var(--blue); }
-  .result b { font-size:1.05rem; } .val { font-variant-numeric:tabular-nums; }
-  .err { color:var(--red); margin-top:12px; font-size:.9rem; }
-  h2 { font-size:1.02rem; margin:26px 0 0; }
-  .refs { color:var(--muted); font-size:.78rem; margin-top:22px; line-height:1.5; }
-  footer { max-width:860px; margin:22px auto 0; text-align:center; color:var(--muted); font-size:.85rem; line-height:1.9; }
+  .const { color:var(--muted); font-size:.82rem; margin-top:6px; }
+  .out-panel { position:sticky; top:16px; }
+  canvas { display:block; width:100%; height:auto; background:var(--dark); }
+  .res { padding:14px 0; border-bottom:1px solid var(--line); }
+  .res:last-child { border-bottom:0; }
+  .res .name { font-weight:700; font-size:.92rem; }
+  .res .name small { font-weight:500; color:var(--muted); }
+  .res .big { font-size:1.55rem; font-weight:700; font-variant-numeric:tabular-nums; margin:2px 0; }
+  .res .big span { font-size:1rem; font-weight:500; color:var(--muted); }
+  .res .eq { font-family:"Cambria Math","Times New Roman",serif; font-style:italic; color:#33445a; font-size:.98rem; }
+  .verdict { display:inline-block; font-weight:700; padding:2px 10px; border-radius:20px; font-size:.85rem; margin-left:6px; font-style:normal; }
+  .verdict.pass { background:#e3f5ea; color:var(--green); } .verdict.fail { background:#fde6e8; color:var(--red); }
+  .empty { color:var(--muted); font-size:.88rem; }
+  .err { color:var(--red); font-size:.9rem; margin-top:8px; }
+  .refs { color:var(--muted); font-size:.78rem; margin:20px auto 0; line-height:1.5; max-width:1120px; }
+  footer { max-width:1120px; margin:22px auto 0; text-align:center; color:var(--muted); font-size:.85rem; line-height:1.9; }
   footer a { color:var(--blue); text-decoration:none; margin:0 8px; white-space:nowrap; }
   footer a:hover { text-decoration:underline; }
   footer svg { width:16px; height:16px; vertical-align:-3px; margin-right:4px; }
-  @media (max-width:640px) { .row, .pick { display:block; } .pick svg { max-width:220px; margin-top:8px; } }
+  @media (max-width:860px) { .grid { grid-template-columns:1fr; } .out-panel { position:static; } }
+  @media (max-width:520px) { .row, .row.two, .pick { grid-template-columns:1fr; } .pick svg { max-width:220px; } }
 </style>
 </head>
 <body>
-<div class="card">
+<div class="wrap">
+<header>
   <h1>Steinberg Displacement Limits</h1>
-  <div class="sub">Relative displacement limit of a PCB-mounted component for 20&nbsp;million stress cycles
-    (Steinberg, <i>Vibration Analysis for Electronic Equipment</i>). Pick the component and where it sits; the sketches update.</div>
-  <div class="formula">Z<sub>3σ</sub> = 0.00022&thinsp;B / (C&thinsp;h&thinsp;r&thinsp;√L) &nbsp;&nbsp;|&nbsp;&nbsp; Z<sub>peak</sub> = 0.00132&thinsp;B / (C&thinsp;h&thinsp;r&thinsp;√L)</div>
+  <div class="sub">Will a component on a circuit board survive vibration and shock? Steinberg's method limits how far the
+    board may flex under the component so its solder joints and leads last 20&nbsp;million stress cycles
+    (Steinberg, <i>Vibration Analysis for Electronic Equipment</i>). Fill in the inputs on the left; the results and the
+    animation on the right update as you type.</div>
+</header>
 
-  <div class="row">
-    <div><label for="B">B — PCB edge along component (in)</label><input id="B" type="number" step="any" value="6.0"></div>
-    <div><label for="L">L — component length (in)</label><input id="L" type="number" step="any" value="2.0"></div>
-    <div><label for="h">h — board thickness (in)</label><input id="h" type="number" step="any" value="0.062"></div>
-  </div>
+<div class="grid">
+  <!-- ======================= INPUTS ======================= -->
+  <section class="panel">
+    <div class="head"><span class="tag in">Inputs</span> Your board and component</div>
+    <div class="body">
+      <div class="step">
+        <h3><span class="num">1</span> Board and component size</h3>
+        <div class="row">
+          <div><label for="B">B: board edge along the component</label><div class="unit"><input id="B" type="number" step="any" value="6.0"><select id="Bu"><option>in</option><option>mm</option></select></div></div>
+          <div><label for="L">L: component length</label><div class="unit"><input id="L" type="number" step="any" value="2.0"><select id="Lu"><option>in</option><option>mm</option></select></div></div>
+          <div><label for="h">h: board thickness</label><div class="unit"><input id="h" type="number" step="any" value="0.062"><select id="hu"><option>in</option><option>mm</option></select></div></div>
+        </div>
+      </div>
 
-  <div class="pick">
-    <div><label for="comp">Component type (sets C)</label><select id="comp"></select></div>
-    <svg id="compPic" viewBox="0 0 190 110" aria-label="component sketch"></svg>
-  </div>
+      <div class="step">
+        <h3><span class="num">2</span> Component type</h3>
+        <p class="hint">Sets the component constant C. Stiffer attachments get a larger C and a smaller allowable displacement.</p>
+        <div class="pick">
+          <div><select id="comp" aria-label="Component type"></select><div class="const" id="cTxt"></div></div>
+          <svg id="compPic" viewBox="0 0 190 110" aria-label="component sketch"></svg>
+        </div>
+      </div>
 
-  <div class="pick">
-    <div><label for="pos">Component position on the board (sets r)</label><select id="pos"></select></div>
-    <svg id="posPic" viewBox="0 0 190 110" aria-label="board position sketch"></svg>
-  </div>
+      <div class="step">
+        <h3><span class="num">3</span> Where it sits on the board</h3>
+        <p class="hint">Sets the position factor r. The board bends most at its center, so r = 1 there.</p>
+        <div class="pick">
+          <div><select id="pos" aria-label="Component position"></select><div class="const" id="rTxt"></div></div>
+          <svg id="posPic" viewBox="0 0 190 110" aria-label="board position sketch"></svg>
+        </div>
+      </div>
 
-  <label for="Ncyc">Design life — stress cycles (Irvine fatigue curve; 2e7 is Steinberg's reference point)</label>
-  <input id="Ncyc" type="number" step="any" value="20000000">
+      <div class="step">
+        <h3><span class="num">4</span> Design life</h3>
+        <p class="hint">Stress cycles the part must survive. 20,000,000 is Steinberg's reference; other values use Irvine's fatigue curve N·Z<sup>6.4</sup> = const.</p>
+        <input id="Ncyc" type="number" step="any" value="20000000" aria-label="Design life in cycles">
+      </div>
 
-  <div class="const" id="cr"></div>
+      <div class="step">
+        <h3><span class="num">5</span> Vibration and shock load <span class="opt">(optional, for margin of safety)</span></h3>
+        <p class="hint">Leave blank to see the limits only.</p>
+        <div class="row two">
+          <div><label for="fn">f<sub>n</sub>: board natural frequency (Hz)</label><input id="fn" type="number" step="any" placeholder="e.g. 180"></div>
+          <div><label for="psd">PSD at f<sub>n</sub> (G²/Hz)</label><input id="psd" type="number" step="any" placeholder="e.g. 0.04"></div>
+          <div><label for="Q">Q: transmissibility (blank = √f<sub>n</sub>)</label><input id="Q" type="number" step="any" placeholder="auto"></div>
+          <div><label for="gpk">Shock level G<sub>peak</sub> (G)</label><input id="gpk" type="number" step="any" placeholder="e.g. 50"></div>
+        </div>
+      </div>
+      <div class="err" id="err"></div>
+    </div>
+  </section>
 
-  <div class="result">
-    <div><b>Z 3σ limit</b> (random vibration): <span class="val" id="zv"></span></div>
-    <div style="margin-top:8px"><b>Z peak</b> (shock): <span class="val" id="zs"></span></div>
-  </div>
-  <div class="err" id="err"></div>
+  <!-- ======================= RESULTS ======================= -->
+  <section class="panel out-panel">
+    <div class="head"><span class="tag out">Results</span> Allowable board displacement</div>
+    <canvas id="anim" width="1080" height="560" aria-label="Animation of the vibrating board and component"></canvas>
+    <div class="body">
+      <div class="res">
+        <div class="name">Random vibration limit Z<sub>3σ</sub> <small>(20 million cycles<span id="lifeTxt"></span>)</small></div>
+        <div class="big" id="zv">-</div>
+        <div class="eq" id="zvEq">Z<sub>3σ</sub> = 0.00022 B / (C h r √L)</div>
+      </div>
+      <div class="res">
+        <div class="name">Shock limit Z<sub>peak</sub></div>
+        <div class="big" id="zs">-</div>
+        <div class="eq">Z<sub>peak</sub> = 0.00132 B / (C h r √L)</div>
+      </div>
+      <div class="res">
+        <div class="name">Margin of safety</div>
+        <div id="mosEmpty" class="empty">Enter f<sub>n</sub> and PSD (and G<sub>peak</sub> for shock) in step 5 to compare the expected displacement with the limits.</div>
+        <div id="mosVib"></div>
+        <div id="mosShk" style="margin-top:10px"></div>
+      </div>
+    </div>
+  </section>
+</div>
 
-  <h2>Optional: margin of safety</h2>
-  <div class="sub" style="margin-bottom:0">Compare the limit against the expected board displacement. Leave blank to skip.</div>
-  <div class="row">
-    <div><label for="fn">f<sub>n</sub> — board natural frequency (Hz)</label><input id="fn" type="number" step="any" placeholder="e.g. 180"></div>
-    <div><label for="psd">PSD at f<sub>n</sub> (G²/Hz)</label><input id="psd" type="number" step="any" placeholder="e.g. 0.04"></div>
-  </div>
-  <div class="row">
-    <div><label for="Q">Q — transmissibility (blank → √f<sub>n</sub>)</label><input id="Q" type="number" step="any" placeholder="auto"></div>
-    <div><label for="gpk">Shock level G<sub>peak</sub> (G)</label><input id="gpk" type="number" step="any" placeholder="e.g. 50"></div>
-  </div>
-  <div class="result" id="mosbox" style="display:none">
-    <div id="mos_vib"></div>
-    <div id="mos_shk" style="margin-top:8px"></div>
-  </div>
-
-  <div class="refs">
-    References: D.&nbsp;S. Steinberg, <i>Vibration Analysis for Electronic Equipment</i>, 3rd&nbsp;ed., Wiley, 2000 &middot;
-    T.&nbsp;Irvine, "Extending Steinberg's Fatigue Analysis of Electronics Equipment Methodology to a Full Relative
-    Displacement vs. Cycles Curve," 2013. When unsure, the conservative choices C&nbsp;=&nbsp;2.25 and r&nbsp;=&nbsp;1 give the
-    smallest (safest) allowable displacement. Component sketches are schematic.
-  </div>
+<div class="refs">
+  References: D.&nbsp;S. Steinberg, <i>Vibration Analysis for Electronic Equipment</i>, 3rd&nbsp;ed., Wiley, 2000 &middot;
+  T.&nbsp;Irvine, "Extending Steinberg's Fatigue Analysis of Electronics Equipment Methodology to a Full Relative
+  Displacement vs. Cycles Curve," 2013. When unsure, the conservative choices C&nbsp;=&nbsp;2.25 and r&nbsp;=&nbsp;1 give the
+  smallest (safest) allowable displacement. Component sketches and the animation are schematic; board motion is exaggerated for visibility.
+</div>
 </div>
 
 <footer>
@@ -142,9 +210,7 @@ const SKETCH = {
   unsure: `${board}<text x="95" y="66" font-size="48" text-anchor="middle" fill="#9aa7b5" font-weight="700">?</text>`,
 };
 // ---- board position sketches (top view)
-const POSPIC = {
-  center: [95, 55], edge: [95, 82], corner: [50, 82], unsure: null,
-};
+const POSPIC = { center: [95, 55], edge: [95, 82], corner: [50, 82], unsure: null };
 function posSketch(key) {
   const pcb = `<rect x="20" y="15" width="150" height="80" fill="#2f7d4f" stroke="${K}"/>
     <line x1="95" y1="15" x2="95" y2="95" stroke="#fff" stroke-dasharray="3 3" opacity=".5"/>
@@ -159,39 +225,156 @@ function fill(sel, obj, def) {
 }
 const $ = id => document.getElementById(id);
 fill($('comp'), COMPONENT_C, 'unsure'); fill($('pos'), POSITION_R, 'unsure');
+const inch = (id) => { const v = parseFloat($(id).value); return $(id + 'u').value === 'mm' ? v / 25.4 : v; };
+const fmt = z => `${z.toFixed(5)} in <span>= ${(z * 25.4).toFixed(4)} mm</span>`;
+const sgn = v => (v >= 0 ? '+' : '') + v.toFixed(2);
+
+// state shared with the animation
+const S = { ok: false, zv: 0, za: null, mos: null, comp: 'unsure', pos: 'unsure' };
 
 function update() {
-  $('compPic').innerHTML = SKETCH[$('comp').value];
-  $('posPic').innerHTML = posSketch($('pos').value);
-  const B = parseFloat($('B').value), L = parseFloat($('L').value), h = parseFloat($('h').value);
-  const C = COMPONENT_C[$('comp').value][1], r = POSITION_R[$('pos').value][1];
+  const comp = $('comp').value, pos = $('pos').value;
+  $('compPic').innerHTML = SKETCH[comp];
+  $('posPic').innerHTML = posSketch(pos);
+  const B = inch('B'), L = inch('L'), h = inch('h');
+  const C = COMPONENT_C[comp][1], r = POSITION_R[pos][1];
+  $('cTxt').textContent = `C = ${C}`; $('rTxt').textContent = `r = ${r}`;
+  S.comp = comp; S.pos = pos;
   const bad = [['B', B], ['L', L], ['h', h]].find(([n, v]) => !(v > 0));
-  if (bad) { $('err').textContent = `${bad[0]} must be a positive number.`; $('zv').textContent = $('zs').textContent = '-'; $('cr').textContent = ''; return; }
+  if (bad) { $('err').textContent = `${bad[0]} must be a positive number.`; $('zv').textContent = $('zs').textContent = '-'; S.ok = false; return; }
   $('err').textContent = '';
   const denom = C * h * r * Math.sqrt(L);
   let zv = 0.00022 * B / denom; const zs = 0.00132 * B / denom;
-  const N = parseFloat($('Ncyc').value); let note = '';
-  if (N > 0 && Math.abs(N - 2e7) > 1) { zv *= Math.pow(2e7 / N, 1 / 6.4); note = `   (vibration limit scaled to ${N.toExponential(1)} cycles, N·Z^6.4 = const)`; }
-  $('cr').textContent = `C = ${C}    r = ${r}${note}`;
-  $('zv').textContent = `${zv.toFixed(6)} in  =  ${(zv * 25.4).toFixed(4)} mm`;
-  $('zs').textContent = `${zs.toFixed(6)} in  =  ${(zs * 25.4).toFixed(4)} mm`;
+  const N = parseFloat($('Ncyc').value);
+  $('lifeTxt').textContent = '';
+  if (N > 0 && Math.abs(N - 2e7) > 1) { zv *= Math.pow(2e7 / N, 1 / 6.4); $('lifeTxt').textContent = ` scaled to ${N.toExponential(1)} cycles by N·Z^6.4 = const`; }
+  $('zv').innerHTML = fmt(zv); $('zs').innerHTML = fmt(zs);
+  $('zvEq').innerHTML = `Z<sub>3σ</sub> = 0.00022 B / (C h r √L) = 0.00022 × ${B.toFixed(3)} / (${C} × ${h.toFixed(4)} × ${r} × √${L.toFixed(3)})`;
+  S.ok = true; S.zv = zv; S.za = null; S.mos = null;
 
   const fn = parseFloat($('fn').value), P = parseFloat($('psd').value), Gp = parseFloat($('gpk').value);
-  let Q = parseFloat($('Q').value); const rows = [];
+  let Q = parseFloat($('Q').value);
+  let any = false;
   if (fn > 0 && P > 0) {
     if (!(Q > 0)) Q = Math.sqrt(fn);
     const grms = Math.sqrt(Math.PI / 2 * P * fn * Q), za = 3 * 9.8 * grms / (fn * fn), mos = zv / za - 1;
-    rows.push(['mos_vib', `Random vibration: expected 3-sigma Z = ${za.toFixed(6)} in  ->  MoS = ${(mos >= 0 ? '+' : '') + mos.toFixed(2)}` + (mos >= 0 ? '  PASS' : '  FAIL'), mos]);
-  } else rows.push(['mos_vib', '', null]);
+    $('mosVib').innerHTML = `<div class="name">Random vibration <span class="verdict ${mos >= 0 ? 'pass' : 'fail'}">${mos >= 0 ? 'PASS' : 'FAIL'}</span></div>
+      <div class="big" style="color:${mos >= 0 ? 'var(--green)' : 'var(--red)'}">MoS = ${sgn(mos)}</div>
+      <div class="eq">G<sub>rms</sub> = √(π/2 · P · f<sub>n</sub> · Q) = ${grms.toFixed(2)} G &nbsp;→&nbsp; Z<sub>3σ</sub><sup>exp</sup> = 3·9.8·G<sub>rms</sub>/f<sub>n</sub>² = ${za.toFixed(5)} in &nbsp;→&nbsp; MoS = Z<sub>limit</sub>/Z<sub>exp</sub> − 1</div>`;
+    S.za = za; S.mos = mos; any = true;
+  } else $('mosVib').innerHTML = '';
   if (fn > 0 && Gp > 0) {
     const zshk = 9.8 * Gp / (fn * fn), mos = zs / zshk - 1;
-    rows.push(['mos_shk', `Shock: expected peak Z = ${zshk.toFixed(6)} in  ->  MoS = ${(mos >= 0 ? '+' : '') + mos.toFixed(2)}` + (mos >= 0 ? '  PASS' : '  FAIL'), mos]);
-  } else rows.push(['mos_shk', '', null]);
-  $('mosbox').style.display = rows.some(r => r[1] !== '') ? 'block' : 'none';
-  for (const [id, text, mos] of rows) { $(id).textContent = text; $(id).style.color = mos === null ? '' : (mos >= 0 ? 'var(--green)' : 'var(--red)'); $(id).style.fontWeight = '600'; }
+    $('mosShk').innerHTML = `<div class="name">Shock <span class="verdict ${mos >= 0 ? 'pass' : 'fail'}">${mos >= 0 ? 'PASS' : 'FAIL'}</span></div>
+      <div class="big" style="color:${mos >= 0 ? 'var(--green)' : 'var(--red)'}">MoS = ${sgn(mos)}</div>
+      <div class="eq">Z<sub>peak</sub><sup>exp</sup> = 9.8·G<sub>peak</sub>/f<sub>n</sub>² = ${zshk.toFixed(5)} in &nbsp;→&nbsp; MoS = Z<sub>limit</sub>/Z<sub>exp</sub> − 1</div>`;
+    any = true;
+  } else $('mosShk').innerHTML = '';
+  $('mosEmpty').style.display = any ? 'none' : 'block';
 }
 document.querySelectorAll('input, select').forEach(el => el.addEventListener('input', update));
 update();
+
+// ======================= ANIMATION =======================
+// Side view of the board in its first bending mode with the chosen component. Motion is exaggerated.
+const cv = $('anim'), g = cv.getContext('2d');
+const CW = cv.width, CH = cv.height;
+const COL = { bg:'#0f1724', ink:'#e8edf5', muted:'#8a97ab', board:'#1f7a4d', edge:'#2fa36a', chip:'#22262e', chipEdge:'#4a5262',
+              gold:'#d9b45a', good:'#35c27a', bad:'#ff5a52', support:'#3a4456', supEdge:'#56627a', gauge:'#1a2433', gaugeEdge:'#33405a' };
+const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+let shown = 0.6;     // displayed level (relative to the limit), eased toward the target
+
+function rr(x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
+
+function draw(ms) {
+  const t = reduce ? 0.12 : ms / 1000;
+  g.fillStyle = COL.bg; g.fillRect(0, 0, CW, CH);
+  g.font = '600 26px -apple-system,"Segoe UI",Helvetica,Arial,sans-serif';
+  if (!S.ok) { g.fillStyle = COL.muted; g.textAlign = 'center'; g.fillText('Enter positive B, L and h', CW / 2, CH / 2); return; }
+
+  // level relative to the limit: the expected displacement when given, otherwise a calm illustrative 60 %
+  const target = S.za ? Math.min(S.za / S.zv, 1.6) : 0.6;
+  shown += (target - shown) * 0.06;
+  const over = S.za ? S.za > S.zv : false;
+
+  // board
+  const x0 = 60, x1 = 760, yb = 330, th = 26;
+  const amp = shown * 70, ph = Math.sin(2 * Math.PI * 1.8 * t);
+  const wAt = x => amp * ph * Math.sin(Math.PI * (x - x0) / (x1 - x0));     // pinned edges, max at the center
+  g.beginPath();
+  for (let x = x0; x <= x1; x += 6) g.lineTo(x, yb - wAt(x) - th / 2);
+  for (let x = x1; x >= x0; x -= 6) g.lineTo(x, yb - wAt(x) + th / 2);
+  g.closePath(); g.fillStyle = COL.board; g.fill(); g.lineWidth = 2; g.strokeStyle = COL.edge; g.stroke();
+  for (const xe of [x0, x1]) { g.beginPath(); g.moveTo(xe - 24, yb + 62); g.lineTo(xe + 24, yb + 62); g.lineTo(xe, yb + 12); g.closePath();
+    g.fillStyle = COL.support; g.fill(); g.strokeStyle = COL.supEdge; g.stroke(); }
+
+  // component: center for center/edge/unsure, quarter span for corner
+  const xc = S.pos === 'corner' ? x0 + (x1 - x0) * 0.3 : (x0 + x1) / 2, half = 120;
+  const slope = (wAt(xc + 1) - wAt(xc - 1)) / 2;
+  const surf = x => yb - wAt(x) - th / 2;
+  const pkgY = surf(xc) - 30;
+  const crack = over && (Math.floor(t * 8) % 2 === 0);
+  g.save(); g.translate(xc, pkgY); g.rotate(-Math.atan(slope));
+  const comp = S.comp;
+  const jointCol = i => over && i ? COL.bad : COL.gold;
+  if (comp === 'resistor') {
+    rr(-70, -26, 140, 34, 16); g.fillStyle = '#c9a26b'; g.fill(); g.strokeStyle = '#7a6a4a'; g.stroke();
+    g.fillStyle = '#7a2e2e'; g.fillRect(-45, -26, 8, 34); g.fillStyle = '#2e4a7a'; g.fillRect(-28, -26, 8, 34);
+  } else {
+    const tall = comp === 'dip' || comp === 'dipbraze' || comp === 'pga' || comp === 'tworows';
+    rr(-half, tall ? -44 : -18, 2 * half, tall ? 44 : 36, 6);
+    g.fillStyle = comp === 'lccc' || comp === 'jlead' ? '#cfc8b8' : COL.chip; g.fill(); g.strokeStyle = COL.chipEdge; g.lineWidth = 2; g.stroke();
+    g.fillStyle = comp === 'lccc' || comp === 'jlead' ? '#5a5446' : '#9aa4b5'; g.textAlign = 'center';
+    g.font = '700 28px -apple-system,"Segoe UI",Helvetica,Arial,sans-serif';
+    g.fillText({ bga:'BGA', lccc:'LCCC', jlead:'PLCC', pga:'PGA', dip:'DIP', dipbraze:'DIP', finepitch:'QFP', tworows:'HYBRID', unsure:'?' }[comp] || '', 0, tall ? -14 : 8);
+  }
+  g.restore();
+  // joints / leads between package and board
+  const n = comp === 'bga' ? 9 : comp === 'resistor' ? 2 : comp === 'lccc' ? 7 : 6;
+  for (let i = 0; i < n; i++) {
+    const f = n === 1 ? 0 : -1 + 2 * i / (n - 1);
+    const bx = xc + f * (comp === 'resistor' ? 105 : comp === 'jlead' || comp === 'finepitch' ? half + 18 : half - 12);
+    const tall = comp === 'dip' || comp === 'dipbraze' || comp === 'pga' || comp === 'tworows';
+    const yTop = pkgY - slope * (bx - xc) + (comp === 'resistor' ? -9 : tall ? 0 : 18);   // underside of the rigid package
+    const flat = surf(xc) - slope * (bx - xc);                                            // where a flat board would be
+    const sy = flat + (surf(bx) - flat) * 3;                                              // board curvature under the package, exaggerated
+    const outer = Math.abs(f) > 0.6;
+    const col = outer ? jointCol(1) : COL.gold;
+    if (comp === 'bga') {
+      const gap = sy - yTop; g.beginPath(); g.ellipse(bx, (sy + yTop) / 2, 8, Math.max(3, gap / 2), 0, 0, 2 * Math.PI); g.fillStyle = col; g.fill();
+    } else {
+      g.strokeStyle = col; g.lineWidth = comp === 'lccc' ? 8 : 4; g.beginPath();
+      if (comp === 'jlead' || comp === 'finepitch' || comp === 'resistor') { const out = Math.sign(f) * 22; g.moveTo(bx - out, yTop); g.quadraticCurveTo(bx, yTop, bx, (yTop + sy) / 2); g.lineTo(bx, sy); }
+      else { g.moveTo(bx, yTop); g.lineTo(bx, sy); }
+      g.stroke();
+    }
+    if (crack && outer) { g.strokeStyle = '#fff'; g.lineWidth = 2.5; g.beginPath(); const cy = (sy + yTop) / 2; g.moveTo(bx - 14, cy + 2); g.lineTo(bx - 4, cy - 4); g.lineTo(bx + 4, cy + 4); g.lineTo(bx + 14, cy - 2); g.stroke(); }
+  }
+
+  // gauge: displacement against the Steinberg limit (limit line at 2/3 of the scale)
+  const gx = 940, gy0 = 440, gy1 = 100, gw = 70, full = 1.5;
+  rr(gx, gy1, gw, gy0 - gy1, 12); g.fillStyle = COL.gauge; g.fill(); g.strokeStyle = COL.gaugeEdge; g.lineWidth = 2; g.stroke();
+  const level = Math.min(shown / full, 1), fillH = (gy0 - gy1 - 12) * level;
+  rr(gx + 7, gy0 - 6 - fillH, gw - 14, Math.max(2, fillH), 8);
+  g.fillStyle = !S.za ? '#5a6b85' : over ? COL.bad : COL.good; g.fill();
+  const yl = gy0 - (gy0 - gy1) * (1 / full);
+  g.setLineDash([12, 8]); g.strokeStyle = COL.ink; g.lineWidth = 3; g.beginPath(); g.moveTo(gx - 30, yl); g.lineTo(gx + gw + 22, yl); g.stroke(); g.setLineDash([]);
+  g.textAlign = 'right'; g.fillStyle = COL.ink; g.font = '700 30px -apple-system,"Segoe UI",Helvetica,Arial,sans-serif';
+  g.fillText('Steinberg', gx - 40, yl - 6); g.fillText('limit', gx - 40, yl + 28);
+  g.textAlign = 'center'; g.fillStyle = COL.muted; g.font = '500 26px -apple-system,"Segoe UI",Helvetica,Arial,sans-serif';
+  g.fillText(S.za ? 'expected' : 'add load', gx + gw / 2, gy0 + 34); g.fillText(S.za ? '3σ motion' : 'in step 5', gx + gw / 2, gy0 + 64);
+
+  // caption
+  g.textAlign = 'left'; g.font = '700 40px -apple-system,"Segoe UI",Helvetica,Arial,sans-serif';
+  if (!S.za) { g.fillStyle = COL.ink; g.fillText(`Allowable: ${S.zv.toFixed(5)} in (${(S.zv * 25.4).toFixed(4)} mm)`, 40, 60); }
+  else { g.fillStyle = over ? COL.bad : COL.good;
+    g.fillText(over ? `FAIL: ${S.za.toFixed(5)} in exceeds the limit` : `PASS: ${S.za.toFixed(5)} in is under the limit`, 40, 60); }
+  g.font = '500 30px -apple-system,"Segoe UI",Helvetica,Arial,sans-serif'; g.fillStyle = COL.muted;
+  g.fillText(over ? 'Outer joints carry the most strain and crack first.' : 'Board motion is exaggerated for visibility.', 40, 530);
+}
+function loop(ms) { draw(ms); if (!reduce) requestAnimationFrame(loop); }
+document.querySelectorAll('input, select').forEach(el => el.addEventListener('input', () => { if (reduce) draw(0); }));
+requestAnimationFrame(loop);
 </script>
 </body>
 </html>
