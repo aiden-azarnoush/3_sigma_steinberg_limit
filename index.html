@@ -37,6 +37,10 @@
   input, select { width:100%; padding:8px 10px; font-size:1rem; border:1px solid #c9d4e0; border-radius:7px; background:#fff; color:var(--ink); }
   .unit { display:flex; } .unit input { border-radius:7px 0 0 7px; } .unit select { width:auto; border-radius:0 7px 7px 0; border-left:0; background:#f4f7fb; font-size:.9rem; }
   .row { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; } .row.two { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .row > div { display:flex; flex-direction:column; justify-content:flex-end; } .row label { margin-top:10px; }
+  .typ { color:var(--muted); font-size:.76rem; margin-top:3px; min-height:1em; }
+  .warn { color:#9a5b00; background:#fff4de; border-radius:7px; padding:8px 10px; font-size:.84rem; margin-top:10px; }
+  .ex { margin-top:10px; padding:7px 12px; border:1px solid #c9d4e0; border-radius:7px; background:#f4f7fb; color:var(--blue); font-weight:600; font-size:.85rem; cursor:pointer; }
   .pick { display:grid; grid-template-columns:minmax(0,1fr) 150px; gap:12px; align-items:center; }
   .pick svg { width:100%; height:auto; border:1px solid #e3e9f0; border-radius:8px; background:#fbfcfe; }
   .const { color:var(--muted); font-size:.82rem; margin-top:6px; }
@@ -80,7 +84,7 @@
       <div class="step">
         <h3><span class="num">1</span> Board and component size</h3>
         <div class="row">
-          <div><label for="B">B: board edge along the component</label><div class="unit"><input id="B" type="number" step="any" value="6.0"><select id="Bu"><option>in</option><option>mm</option></select></div></div>
+          <div><label for="B">B: board edge length</label><div class="unit"><input id="B" type="number" step="any" value="6.0"><select id="Bu"><option>in</option><option>mm</option></select></div></div>
           <div><label for="L">L: component length</label><div class="unit"><input id="L" type="number" step="any" value="2.0"><select id="Lu"><option>in</option><option>mm</option></select></div></div>
           <div><label for="h">h: board thickness</label><div class="unit"><input id="h" type="number" step="any" value="0.062"><select id="hu"><option>in</option><option>mm</option></select></div></div>
         </div>
@@ -112,14 +116,16 @@
 
       <div class="step">
         <h3><span class="num">5</span> Vibration and shock load <span class="opt">(optional, for margin of safety)</span></h3>
-        <p class="hint">Leave blank to see the limits only.</p>
+        <p class="hint">Leave blank to see the limits only. Typical circuit boards: f<sub>n</sub> 100 to 500 Hz, PSD 0.01 to 0.1 G²/Hz, shock 20 to 100 G.</p>
         <div class="row two">
-          <div><label for="fn">f<sub>n</sub>: board natural frequency (Hz)</label><input id="fn" type="number" step="any" placeholder="e.g. 180"></div>
-          <div><label for="psd">PSD at f<sub>n</sub> (G²/Hz)</label><input id="psd" type="number" step="any" placeholder="e.g. 0.04"></div>
-          <div><label for="Q">Q: transmissibility (blank = √f<sub>n</sub>)</label><input id="Q" type="number" step="any" placeholder="auto"></div>
-          <div><label for="gpk">Shock level G<sub>peak</sub> (G)</label><input id="gpk" type="number" step="any" placeholder="e.g. 50"></div>
+          <div><label for="fn">f<sub>n</sub>: board natural frequency (Hz)</label><input id="fn" type="number" step="any" placeholder="e.g. 200"><div class="typ">typical 100 to 500 Hz</div></div>
+          <div><label for="psd">PSD at f<sub>n</sub> (G²/Hz)</label><input id="psd" type="number" step="any" placeholder="e.g. 0.04"><div class="typ">typical 0.01 to 0.1 G²/Hz</div></div>
+          <div><label for="Q">Q: transmissibility (blank = √f<sub>n</sub>)</label><input id="Q" type="number" step="any" placeholder="auto"><div class="typ">usually leave blank</div></div>
+          <div><label for="gpk">Shock level G<sub>peak</sub> (G)</label><input id="gpk" type="number" step="any" placeholder="e.g. 50"><div class="typ">typical 20 to 100 G</div></div>
         </div>
       </div>
+        <div class="warn" id="warn" hidden></div>
+        <button class="ex" id="example" type="button">Fill in an example that passes</button>
       <div class="err" id="err"></div>
     </div>
   </section>
@@ -253,6 +259,12 @@ function update() {
   S.ok = true; S.zv = zv; S.za = null; S.mos = null;
 
   const fn = parseFloat($('fn').value), P = parseFloat($('psd').value), Gp = parseFloat($('gpk').value);
+  const w = [];
+  if (fn > 0 && fn < 50) w.push(`f<sub>n</sub> = ${fn} Hz is very low for a circuit board (usually 100 to 500 Hz). Displacement grows roughly as 1/f<sub>n</sub><sup>1.25</sup>, so a low f<sub>n</sub> fails almost any limit.`);
+  if (P > 0.3) w.push(`PSD = ${P} G²/Hz is a severe input; typical test levels are 0.01 to 0.1 G²/Hz.`);
+  if (B < 0.8) w.push(`B = ${B.toFixed(3)} in is a very small board edge. If you meant inches, check the unit selector in step 1.`);
+  if (h > 0.5) w.push(`h = ${h.toFixed(3)} in is unusually thick for a circuit board (0.031 to 0.125 in is common). Check the unit selector in step 1.`);
+  $('warn').innerHTML = w.join('<br>'); $('warn').hidden = !w.length;
   let Q = parseFloat($('Q').value);
   let any = false;
   if (fn > 0 && P > 0) {
@@ -273,6 +285,11 @@ function update() {
   $('mosEmpty').style.display = any ? 'none' : 'block';
 }
 document.querySelectorAll('input, select').forEach(el => el.addEventListener('input', update));
+$('example').addEventListener('click', () => {
+  const v = { B:'6', L:'2', h:'0.062', Ncyc:'20000000', fn:'200', psd:'0.04', Q:'', gpk:'50' };
+  for (const [k, x] of Object.entries(v)) $(k).value = x;
+  $('Bu').value = $('Lu').value = $('hu').value = 'in'; $('comp').value = 'dip'; $('pos').value = 'edge'; update();
+});
 update();
 
 // ======================= ANIMATION =======================
